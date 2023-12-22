@@ -30,54 +30,22 @@ def calcular_fechas_inversion(request):
     except Producto.DoesNotExist:
         return response.Response(status=status.HTTP_404_NOT_FOUND, message='Producto no encontrado')
 
-    plazo_real = 1
-    fecha_actual = datetime.now()
-
-    hora_actual = int(fecha_actual.strftime("%H"))
-    fecha_inicio = pd.to_datetime(fecha_creacion)
-
-    dias_festivos = __dias_festivos(
-        fecha_inicio, fecha_inicio + pd.DateOffset(days=plazo))
-
     dias_festivos = [pd.to_datetime(dia.fecha).strftime(
-        "%Y-%m-%d") for dia in dias_festivos]
+        "%Y-%m-%d") for dia in __dias_festivos()]
 
     hora_fin = int(producto.horario.horaFin.strftime("%H"))
 
-    calculo_fechas = CalculadoraFechas(
-        fecha_inicio, hora_actual, plazo, dias_festivos)
+    calculo_fechas = CalculadoraFechas(fecha_creacion,
+                                       plazo, dias_festivos)
 
-    if (datetime.now().strftime("%Y-%m-%d") == fecha_creacion):
-        dia_adicional_por_horario = calculo_fechas.ajustar_dia_por_horario(
-            hora_fin)
-        plazo_real += dia_adicional_por_horario
-        fecha_inicio += pd.DateOffset(days=dia_adicional_por_horario)
+    calculo = calculo_fechas.calcular_fechas(hora_fin)
+    calculo['producto'] = producto.id
 
-    dias_adicionales_fecha_inicio = calculo_fechas.calcular_fecha_inicio(
-        fecha_inicio)
-    plazo_real += dias_adicionales_fecha_inicio
-    fecha_inicio += pd.DateOffset(days=dias_adicionales_fecha_inicio)
-
-    dias_adicionales_fecha_fin = calculo_fechas.calcular_fecha_fin(
-        fecha_inicio, plazo)
-    plazo_real += dias_adicionales_fecha_fin
-
-    fecha_final = fecha_inicio + pd.DateOffset(days=dias_adicionales_fecha_fin)
-
-    response_product = {
-        'producto': id_producto,
-        'plazo': plazo,
-        'fechaInicio': fecha_inicio,
-        'fechaFin': fecha_final,
-        'plazoReal': plazo_real
-    }
-
-    producto_serializer = ProductoResponseSerializer(response_product)
+    producto_serializer = ProductoResponseSerializer(calculo)
 
     return response.Response(status=status.HTTP_200_OK, data=producto_serializer.data)
 
 
-def __dias_festivos(fecha_inicio, fecha_fin):
-    dias_festivos = DiasFestivos.objects.filter(
-        fecha__range=[fecha_inicio, fecha_fin])
+def __dias_festivos():
+    dias_festivos = DiasFestivos.objects.filter()
     return dias_festivos.all()
