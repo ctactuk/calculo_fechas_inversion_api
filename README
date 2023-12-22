@@ -1,0 +1,63 @@
+API Calculo Fechas de Inversion
+
+To Run this API you need docker desktop installed on your PC
+
+
+command:
+
+docker compose up -d
+then run the fallowing code to make migrations:
+
+docker compose exec dj python manage.py migrate
+
+to create an admin user run:
+docker compose exec dj python manage.py createsuperuser
+
+now open in your brwoser below url:
+http://localhost:8000/admin
+
+now login with your created credentials in the before step
+
+# API Calculo Fechas de Inversion
+
+## Overview
+
+This API is designed to perform date calculations related to investments. To run this API locally, ensure that you have Docker Desktop installed on your computer.
+
+## Installation and Setup
+
+1. Clone this repository to your local machine.
+
+```bash
+git git@github.com:ctactuk/calculo_fechas_inversion_api.git
+cd calculo_fechas_inversion_api
+```
+
+2. Open project folder on terminal and eun the following commands:
+
+```bash
+docker-compose up -d
+
+docker-compose exec dj python manage.py migrate
+```
+
+3. On same terminal run the following command to create admin user:
+```bash
+docker-compose exec dj python manage.py createsuperuser
+```
+
+4. Open your browser and navigate to the following URL:
+```bash
+http://localhost:8000/admin
+```
+
+5. Log in with the admin user you created in the previous step.
+
+
+## Usage
+After logging in to the admin panel, maintanance section for Productos, Horarios and Dias Festivos.
+
+## Notes
+Ensure that Docker Desktop is installed and running on your machine before attempting to set up and run the API.
+The API can be accessed locally at http://localhost:8000.
+Feel free to reach out if you encounter any issues or have questions related to the API.
