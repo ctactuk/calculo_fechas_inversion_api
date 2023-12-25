@@ -33,12 +33,12 @@ def calcular_fechas_inversion(request):
     dias_festivos = [pd.to_datetime(dia.fecha).strftime(
         "%Y-%m-%d") for dia in __dias_festivos()]
 
-    hora_fin = int(producto.horario.horaFin.strftime("%H"))
+    hora_fin = producto.horario.horaFin.strftime("%H:%M")
 
-    calculo_fechas = CalculadoraFechas(fecha_creacion,
-                                       plazo, dias_festivos)
+    calculo_fechas = CalculadoraFechas(datetime.strptime(
+        fecha_creacion, "%Y-%m-%d"), plazo, hora_fin, dias_festivos)
 
-    calculo = calculo_fechas.calcular_fechas(hora_fin)
+    calculo = calculo_fechas.calcular_fechas()
     calculo['producto'] = producto.id
 
     producto_serializer = ProductoResponseSerializer(calculo)
