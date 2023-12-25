@@ -4,7 +4,6 @@ from diasfestivos.models import DiasFestivos
 from .models import Producto
 from producto.api import ProductoSerializer, ProductoResponseSerializer
 from calculo_fechas_inversion.logic.CalculadoraFechasInversiones import CalculadoraFechas
-import pandas as pd
 from datetime import datetime
 
 
@@ -30,8 +29,8 @@ def calcular_fechas_inversion(request):
     except Producto.DoesNotExist:
         return response.Response(status=status.HTTP_404_NOT_FOUND, message='Producto no encontrado')
 
-    dias_festivos = [pd.to_datetime(dia.fecha).strftime(
-        "%Y-%m-%d") for dia in __dias_festivos()]
+    dias_festivos = [datetime.strftime(
+        dia.fecha, "%Y-%m-%d") for dia in __dias_festivos()]
 
     hora_fin = producto.horario.horaFin.strftime("%H:%M")
 
