@@ -21,7 +21,7 @@ class CalculadoraFechas:
         self.calcular_fecha_fin()
         self.plazo_real = (self.fecha_final - self.fecha_inicio).days + 1
         return {
-            'producto': 0,
+            'producto': self.producto.id,
             'plazo': self.plazo,
             'fechaInicio': self.fecha_inicio,
             'fechaFin': self.fecha_final,
