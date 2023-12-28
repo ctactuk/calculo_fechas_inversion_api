@@ -18,12 +18,13 @@ def productos(request):
 
 
 @api_view(['POST'])
-@permission_classes((permissions.IsAuthenticated,))
+@permission_classes((permissions.AllowAny,))
 @schema(None)
 def calcular_fechas_inversion(request):
     fecha_creacion = request.data['fechaCreacion']
     plazo = request.data['plazo']
     id_producto = request.data['producto']
+    en_reinversion = request.data['enReinversion']
 
     try:
         producto = Producto.objects.get(pk=id_producto)
@@ -33,13 +34,10 @@ def calcular_fechas_inversion(request):
     dias_festivos = [pd.to_datetime(dia.fecha).strftime(
         "%Y-%m-%d") for dia in __dias_festivos()]
 
-    hora_fin = int(producto.horario.horaFin.strftime("%H"))
+    calculo_fechas = CalculadoraFechas(pd.to_datetime(
+        fecha_creacion), plazo, dias_festivos, en_reinversion, producto)
 
-    calculo_fechas = CalculadoraFechas(fecha_creacion,
-                                       plazo, dias_festivos)
-
-    calculo = calculo_fechas.calcular_fechas(hora_fin)
-    calculo['producto'] = producto.id
+    calculo = calculo_fechas.calcular_fechas()
 
     producto_serializer = ProductoResponseSerializer(calculo)
 

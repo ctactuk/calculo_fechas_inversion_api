@@ -1,4 +1,5 @@
 from django.db import models
+
 import datetime as dt
 
 HOUR_CHOICES = [(dt.time(hour=x), '{:02d}:00'.format(x)) for x in range(0, 24)]
@@ -22,11 +23,10 @@ class HorarioProducto(models.Model):
 
 class Producto(models.Model):
     producto = models.CharField(max_length=100)
-    plazo = models.IntegerField(verbose_name="Plazo en días")
-    fechaCreacion = models.DateField(auto_now_add=True)
-    fechaInicio = models.DateField(null=True, blank=True)
-    fechaFin = models.DateField(null=True, blank=True)
-    plazoReal = models.IntegerField(null=True, blank=True)
+    inversion_hora_operativa_menor_igual = models.IntegerField()
+    inversion_hora_operativa_mayor = models.IntegerField()
+    reinversion_hora_operativa_menor_igual = models.IntegerField()
+    reinversion_hora_operativa_mayor = models.IntegerField()
     horario = models.OneToOneField(
         HorarioProducto, on_delete=models.CASCADE, null=True, blank=True)
 
@@ -36,4 +36,4 @@ class Producto(models.Model):
         ordering = ['producto']
 
     def __str__(self):
-        return self.producto + " - " + str(self.plazo) + " días" + " - " + str(self.fechaCreacion)
+        return self.producto + " - " + str(self.horario) + " - " + str(self.inversion_hora_operativa_menor_igual) + " - " + str(self.inversion_hora_operativa_mayor) + " - " + str(self.reinversion_hora_operativa_menor_igual) + " - " + str(self.reinversion_hora_operativa_mayor)

@@ -1,69 +1,70 @@
 from datetime import datetime
 import pandas as pd
+from typing import List
+from producto.models import Producto
 
 
 class CalculadoraFechas:
-    def __init__(self, fecha_creacion, plazo, fechas_festivas):
+    def __init__(self, fecha_creacion, plazo: int, fechas_festivas: List, en_reinversion: bool, producto: Producto):
         self.fecha_creacion = fecha_creacion
         self.plazo = plazo
         self.fechas_festivas = fechas_festivas
         self.plazo_real = 1
-        self.hora_actual = int(datetime.now().strftime("%H"))
+        self.fecha_final = None
+        self.fecha_inicio = None
+        self.en_reinversion = en_reinversion
+        self.producto = producto
 
-    def calcular_fechas(self, hora_fin):
-        fecha_inicio = pd.to_datetime(self.fecha_creacion)
-
-        if (datetime.now().strftime("%Y-%m-%d") == self.fecha_creacion):
-            dia_adicional_por_horario = self.ajustar_dia_por_horario(
-                hora_fin)
-            self.plazo_real += dia_adicional_por_horario
-            fecha_inicio += pd.DateOffset(days=dia_adicional_por_horario)
-
-        dias_adicionales_fecha_inicio = self.calcular_fecha_inicio(
-            fecha_inicio)
-        self.plazo_real += dias_adicionales_fecha_inicio
-        fecha_inicio += pd.DateOffset(days=dias_adicionales_fecha_inicio)
-
-        dias_adicionales_fecha_fin = self.calcular_fecha_fin(
-            fecha_inicio, self.plazo)
-        self.plazo_real += dias_adicionales_fecha_fin
-
-        fecha_final = fecha_inicio + \
-            pd.DateOffset(days=dias_adicionales_fecha_fin)
-
+    def calcular_fechas(self):
+        self.ajustar_plazo_real_por_horario()
+        self.calcular_fecha_inicio()
+        self.calcular_fecha_fin()
+        self.plazo_real = (self.fecha_final - self.fecha_inicio).days + 1
         return {
             'producto': 0,
             'plazo': self.plazo,
-            'fechaInicio': fecha_inicio,
-            'fechaFin': fecha_final,
+            'fechaInicio': self.fecha_inicio,
+            'fechaFin': self.fecha_final,
             'plazoReal': self.plazo_real
         }
 
-    def _es_fecha_festiva(self, fecha):
+    def calcular_fecha_inicio(self) -> None:
+        while self.es_dia_no_laboral(self.fecha_inicio):
+            self.fecha_inicio += pd.DateOffset(days=1)
+
+    def calcular_fecha_fin(self) -> None:
+        self.fecha_final = self.fecha_inicio + \
+            pd.DateOffset(days=1) + pd.DateOffset(days=self.plazo)
+
+        while self.es_dia_no_laboral(self.fecha_final):
+            self.fecha_final += pd.DateOffset(days=1)
+
+    def _es_fecha_festiva(self, fecha) -> None:
         return fecha in self.fechas_festivas
 
-    def calcular_fecha_inicio(self, fecha):
-        dias_a_adicionar = 0
+    def es_dia_no_laboral(self, fecha) -> None:
+        return fecha.weekday() >= 5 or self._es_fecha_festiva(fecha.strftime("%Y-%m-%d"))
 
-        while fecha.weekday() in [5, 6] or self._es_fecha_festiva(fecha.strftime("%Y-%m-%d")):
-            dias_a_adicionar += 1
-            fecha += pd.DateOffset(days=1)
+    def ajustar_plazo_real_por_horario(self) -> None:
+        self.fecha_inicio = self.fecha_creacion
 
-        return dias_a_adicionar
+        hora_cierra_producto = int(
+            self.producto.horario.horaFin.strftime("%H"))
 
-    def calcular_fecha_fin(self, fecha, plazo):
-        conteo_dias_1 = 1
-        dias_a_adicionar = 0
-        while (conteo_dias_1 < plazo):
-            if not (fecha.weekday() in [5, 6] or self._es_fecha_festiva(fecha.strftime("%Y-%m-%d"))):
-                conteo_dias_1 += 1
-            fecha += pd.DateOffset(days=1)
-            dias_a_adicionar += 1
-        return dias_a_adicionar
+        hora_creacion = int(self.fecha_creacion.strftime("%H"))
 
-    def ajustar_dia_por_horario(self, hora_fin):
-        dias_a_adicionar = 0
-        if self.hora_actual >= hora_fin:
-            dias_a_adicionar += 1
-            return dias_a_adicionar
-        return dias_a_adicionar
+        if self.en_reinversion:
+            if hora_creacion <= hora_cierra_producto:
+                self.fecha_inicio += pd.DateOffset(
+                    days=self.producto.reinversion_hora_operativa_menor_igual)
+            if hora_creacion > hora_cierra_producto:
+                self.fecha_inicio += pd.DateOffset(
+                    days=self.producto.reinversion_hora_operativa_mayor)
+        else:
+
+            if hora_creacion <= hora_cierra_producto:
+                self.fecha_inicio += pd.DateOffset(
+                    days=self.producto.inversion_hora_operativa_menor_igual)
+            if hora_creacion > hora_cierra_producto:
+                self.fecha_inicio += pd.DateOffset(
+                    days=self.producto.inversion_hora_operativa_mayor)
