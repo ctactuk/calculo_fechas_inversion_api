@@ -18,7 +18,7 @@ def productos(request):
 
 
 @api_view(['POST'])
-@permission_classes((permissions.AllowAny,))
+@permission_classes((permissions.IsAuthenticated,))
 @schema(None)
 def calcular_fechas_inversion(request):
     fecha_creacion = request.data['fechaCreacion']
