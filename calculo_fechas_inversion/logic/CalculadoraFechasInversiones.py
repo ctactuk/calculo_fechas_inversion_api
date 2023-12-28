@@ -48,10 +48,9 @@ class CalculadoraFechas:
     def ajustar_plazo_real_por_horario(self) -> None:
         self.fecha_inicio = self.fecha_creacion
 
-        hora_cierra_producto = int(
-            self.producto.horario.horaFin.strftime("%H"))
+        hora_cierra_producto = self.producto.horario.horaFin
 
-        hora_creacion = int(self.fecha_creacion.strftime("%H"))
+        hora_creacion = self.fecha_creacion.time()
 
         if self.en_reinversion:
             if hora_creacion <= hora_cierra_producto:
